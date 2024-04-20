@@ -103,10 +103,10 @@ func (d *RestDelivery) GetUser(c *gin.Context) {
 	}
 
 	type Response struct {
-		User postgres.User `json:"user"`
+		Data postgres.User `json:"data"`
 	}
 	c.JSON(http.StatusOK, Response{
-		User: *user,
+		Data: *user,
 	})
 }
 
