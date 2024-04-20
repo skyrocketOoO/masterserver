@@ -5,6 +5,7 @@ replace github.com/skyrocketOoO/masterserver => ../masterserver
 go 1.22.1
 
 require (
+	github.com/gin-contrib/cors v1.7.1
 	github.com/gin-gonic/gin v1.9.1
 	github.com/rotisserie/eris v0.5.4
 	github.com/rs/zerolog v1.32.0

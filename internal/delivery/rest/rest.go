@@ -47,6 +47,18 @@ func (d *RestDelivery) Healthy(c *gin.Context) {
 }
 
 func (d *RestDelivery) GetUsers(c *gin.Context) {
+	sortStr := c.Query("sort")
+	sort := []string{}
+	if err := json.Unmarshal([]byte(sortStr), &sort); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid filter parameter"})
+		return
+	}
+	rangeStr := c.Query("range")
+	rang := []int{}
+	if err := json.Unmarshal([]byte(rangeStr), &rang); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid filter parameter"})
+		return
+	}
 	filterStr := c.Query("filter")
 	filter := make(map[string]interface{})
 	if err := json.Unmarshal([]byte(filterStr), &filter); err != nil {
@@ -54,17 +66,26 @@ func (d *RestDelivery) GetUsers(c *gin.Context) {
 		return
 	}
 
-	users, err := d.usecase.GetUsers(c.Request.Context(), filter)
+	users, err := d.usecase.GetUsers(c.Request.Context(), filter,
+		domain.Sort{
+			Field: sort[0],
+			Order: sort[1],
+		},
+		domain.Range{
+			Start:  rang[0],
+			Length: rang[1],
+		})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
 	type Response struct {
-		Users []postgres.User `json:"users"`
+		Data  []postgres.User `json:"data"`
+		Total int             `json:"total"`
 	}
 	c.JSON(http.StatusOK, Response{
-		Users: users,
+		Data:  users,
+		Total: len(users),
 	})
 }
 
@@ -90,50 +111,59 @@ func (d *RestDelivery) GetUser(c *gin.Context) {
 }
 
 func (d *RestDelivery) CreateUser(c *gin.Context) {
-	// Handle create record action
-	// Parse request body to get the new post data
-	var postData map[string]interface{}
-	if err := c.BindJSON(&postData); err != nil {
+	type requestBody struct {
+		User postgres.User `json:"user"`
+	}
+	reqBody := requestBody{}
+	if err := c.BindJSON(&reqBody); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Perform the necessary actions (e.g., save data to database)
-	// Return the appropriate response
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Create a record",
-		"data":    postData,
-	})
+	if err := d.usecase.CreateUser(c.Request.Context(), &reqBody.User); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.Status(http.StatusOK)
 }
 
 func (d *RestDelivery) UpdateUser(c *gin.Context) {
-	// Handle update record action
-	id := c.Param("id")
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid id parameter"})
+	}
+	type requestBody struct {
+		Updates map[string]interface{} `json:"updates"`
+	}
 
-	// Parse request body to get the updated post data
-	var updateData map[string]interface{}
-	if err := c.BindJSON(&updateData); err != nil {
+	reqBody := requestBody{}
+	if err := c.BindJSON(&reqBody); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Perform the necessary actions (e.g., update data in database)
-	// Return the appropriate response
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Update a record",
-		"id":      id,
-		"data":    updateData,
-	})
+	if err := d.usecase.UpdateUser(c.Request.Context(), uint(id),
+		reqBody.Updates); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.Status(http.StatusOK)
 }
 
 func (d *RestDelivery) DeleteUser(c *gin.Context) {
-	// Handle delete record action
-	id := c.Param("id")
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid id parameter"})
+	}
 
-	// Perform the necessary actions (e.g., delete data from database)
-	// Return the appropriate response
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Delete a record",
-		"id":      id,
-	})
+	if err := d.usecase.DeleteUser(c.Request.Context(), uint(id)); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.Status(http.StatusOK)
 }

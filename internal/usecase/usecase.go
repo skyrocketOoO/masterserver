@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 
+	"github.com/skyrocketOoO/masterserver/domain"
 	"github.com/skyrocketOoO/masterserver/internal/infra/postgres"
 )
 
@@ -25,9 +26,9 @@ func (u *Usecase) Healthy(c context.Context) error {
 	return nil
 }
 
-func (u *Usecase) GetUsers(ctx context.Context,
-	filter map[string]interface{}) ([]postgres.User, error) {
-	return u.repo.GetUsers(ctx, filter)
+func (u *Usecase) GetUsers(ctx context.Context, filter map[string]interface{},
+	sort domain.Sort, rang domain.Range) ([]postgres.User, error) {
+	return u.repo.GetUsers(ctx, filter, sort, rang)
 }
 
 func (u *Usecase) GetUser(ctx context.Context, id uint) (*postgres.User, error) {

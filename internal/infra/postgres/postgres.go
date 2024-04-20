@@ -2,7 +2,9 @@ package postgres
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/skyrocketOoO/masterserver/domain"
 	"gorm.io/gorm"
 )
 
@@ -11,6 +13,7 @@ type OrmRepository struct {
 }
 
 func NewOrmRepository(db *gorm.DB) *OrmRepository {
+	db.AutoMigrate(&User{})
 	return &OrmRepository{
 		db: db,
 	}
@@ -28,10 +31,12 @@ func (r *OrmRepository) Ping(c context.Context) error {
 	return nil
 }
 
-func (r *OrmRepository) GetUsers(c context.Context,
-	filter map[string]interface{}) ([]User, error) {
+func (r *OrmRepository) GetUsers(c context.Context, filter map[string]interface{},
+	sort domain.Sort, rang domain.Range) ([]User, error) {
 	users := []User{}
-	if err := r.db.Where(filter).Find(&users).Error; err != nil {
+	if err := r.db.Order(fmt.Sprintf("%s %s", sort.Field, sort.Order)).
+		Offset(rang.Start - 1).Limit(rang.Length).
+		Where(filter).Find(&users).Error; err != nil {
 		return nil, err
 	}
 	return users, nil

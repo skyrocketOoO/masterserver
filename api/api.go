@@ -10,11 +10,11 @@ func Binding(r *gin.Engine, d *rest.RestDelivery) {
 	r.GET("/healthy", d.Healthy)
 	// r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	userR := r.Group("/posts")
+	userR := r.Group("/users")
 	{
-		userR.GET("/", d.GetUsers)
+		userR.GET("", d.GetUsers)
 		userR.GET("/:id", d.GetUser)
-		userR.POST("/", d.CreateUser)
+		userR.POST("", d.CreateUser)
 		userR.PUT("/:id", d.UpdateUser)
 		userR.DELETE("/:id", d.DeleteUser)
 	}

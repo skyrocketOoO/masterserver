@@ -4,6 +4,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	errors "github.com/rotisserie/eris"
 	"github.com/rs/zerolog"
@@ -11,7 +12,6 @@ import (
 	"github.com/skyrocketOoO/masterserver/api"
 	"github.com/skyrocketOoO/masterserver/config"
 	"github.com/skyrocketOoO/masterserver/internal/delivery/rest"
-	"github.com/skyrocketOoO/masterserver/internal/delivery/rest/middleware"
 	"github.com/skyrocketOoO/masterserver/internal/infra/postgres"
 	"github.com/skyrocketOoO/masterserver/internal/usecase"
 )
@@ -37,7 +37,7 @@ func main() {
 	delivery := rest.NewRestDelivery(usecase)
 
 	router := gin.Default()
-	router.Use(middleware.CORS())
+	router.Use(cors.Default())
 	api.Binding(router, delivery)
 
 	router.Run(":8081")
