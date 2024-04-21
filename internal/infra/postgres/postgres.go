@@ -32,10 +32,11 @@ func (r *OrmRepository) Ping(c context.Context) error {
 }
 
 func (r *OrmRepository) GetUsers(c context.Context, filter map[string]interface{},
-	sort domain.Sort, rang domain.Range) ([]User, error) {
+	sort domain.Sort, pagination domain.Pagination) ([]User, error) {
+
 	users := []User{}
 	if err := r.db.Order(fmt.Sprintf("%s %s", sort.Field, sort.Order)).
-		Offset(rang.Start - 1).Limit(rang.Length).
+		Offset((pagination.Page - 1) * pagination.PerPage).Limit(pagination.PerPage).
 		Where(filter).Find(&users).Error; err != nil {
 		return nil, err
 	}
@@ -50,8 +51,11 @@ func (r *OrmRepository) GetUserById(c context.Context, id uint) (*User, error) {
 	return &user, nil
 }
 
-func (r *OrmRepository) CreateUser(c context.Context, user *User) error {
-	return r.db.Create(user).Error
+func (r *OrmRepository) CreateUser(c context.Context, user User) (User, error) {
+	if err := r.db.Create(&user).Error; err != nil {
+		return User{}, err
+	}
+	return user, nil
 }
 
 func (r *OrmRepository) UpdateUser(c context.Context, id uint,

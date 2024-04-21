@@ -27,8 +27,8 @@ func (u *Usecase) Healthy(c context.Context) error {
 }
 
 func (u *Usecase) GetUsers(ctx context.Context, filter map[string]interface{},
-	sort domain.Sort, rang domain.Range) ([]postgres.User, error) {
-	return u.repo.GetUsers(ctx, filter, sort, rang)
+	sort domain.Sort, pagination domain.Pagination) ([]postgres.User, error) {
+	return u.repo.GetUsers(ctx, filter, sort, pagination)
 }
 
 func (u *Usecase) GetUser(ctx context.Context, id uint) (*postgres.User, error) {
@@ -39,7 +39,12 @@ func (u *Usecase) GetUser(ctx context.Context, id uint) (*postgres.User, error) 
 	return user, nil
 }
 
-func (u *Usecase) CreateUser(ctx context.Context, user *postgres.User) error {
+func (u *Usecase) GetManyReference(ctx context.Context, target string, id uint,
+	filter map[string]interface{}, sort domain.Sort, rang domain.Pagination) {
+}
+
+func (u *Usecase) CreateUser(ctx context.Context, user postgres.User) (
+	postgres.User, error) {
 	return u.repo.CreateUser(ctx, user)
 }
 

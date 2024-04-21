@@ -2,6 +2,7 @@ package rest
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -53,9 +54,9 @@ func (d *RestDelivery) GetUsers(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid filter parameter"})
 		return
 	}
-	rangeStr := c.Query("range")
-	rang := []int{}
-	if err := json.Unmarshal([]byte(rangeStr), &rang); err != nil {
+	paginationStr := c.Query("range")
+	Pagination := []int{}
+	if err := json.Unmarshal([]byte(paginationStr), &Pagination); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid filter parameter"})
 		return
 	}
@@ -71,9 +72,9 @@ func (d *RestDelivery) GetUsers(c *gin.Context) {
 			Field: sort[0],
 			Order: sort[1],
 		},
-		domain.Range{
-			Start:  rang[0],
-			Length: rang[1],
+		domain.Pagination{
+			Page:    Pagination[0],
+			PerPage: Pagination[1],
 		})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -110,22 +111,68 @@ func (d *RestDelivery) GetUser(c *gin.Context) {
 	})
 }
 
+func (d *RestDelivery) GetManyUsers(c *gin.Context) {
+	// Parse the IDs from the query string
+	idsStr := c.Query("ids")
+	fmt.Println(idsStr)
+	// var getManyParams GetManyParams
+	// if err := json.Unmarshal([]byte(idsStr), &getManyParams); err != nil {
+	// 	c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ids parameter"})
+	// 	return
+	// }
+
+	// // Retrieve the users for the given IDs
+	// users, err := d.usecase.GetManyUsers(c.Request.Context(), getManyParams.ids)
+	// if err != nil {
+	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	// 	return
+	// }
+
+	// // Return the users as a response
+	// var responseData []Record // Assuming Record is the struct for your users
+	// for _, user := range users {
+	// 	// Convert each user to a Record and append to the responseData slice
+	// 	record := Record{
+	// 		ID:   user.ID,
+	// 		Name: user.Name,
+	// 		// Add other fields as needed
+	// 	}
+	// 	responseData = append(responseData, record)
+	// }
+
+	// // Construct the response
+	// response := GetManyResult{
+	// 	Data: responseData,
+	// }
+	// c.JSON(http.StatusOK, response)
+}
+
+func (d *RestDelivery) GetManyReference(c *gin.Context) {
+	c.JSON(http.StatusInternalServerError, gin.H{"message": "not implemented"})
+}
+
 func (d *RestDelivery) CreateUser(c *gin.Context) {
 	type requestBody struct {
-		User postgres.User `json:"user"`
+		Data postgres.User `json:"data"`
 	}
 	reqBody := requestBody{}
 	if err := c.BindJSON(&reqBody); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
-	if err := d.usecase.CreateUser(c.Request.Context(), &reqBody.User); err != nil {
+	fmt.Println(reqBody.Data)
+	user, err := d.usecase.CreateUser(c.Request.Context(), reqBody.Data)
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.Status(http.StatusOK)
+	type Response struct {
+		Data postgres.User `json:"data"`
+	}
+	c.JSON(http.StatusOK, Response{
+		Data: user,
+	})
 }
 
 func (d *RestDelivery) UpdateUser(c *gin.Context) {

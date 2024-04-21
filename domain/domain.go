@@ -10,7 +10,7 @@ type Sort struct {
 	Order string
 }
 
-type Range struct {
-	Start  int
-	Length int
+type Pagination struct {
+	Page    int
+	PerPage int
 }
