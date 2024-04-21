@@ -182,22 +182,28 @@ func (d *RestDelivery) UpdateUser(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid id parameter"})
 	}
 	type requestBody struct {
-		Updates map[string]interface{} `json:"updates"`
+		Data         map[string]interface{} `json:"data"`
+		PreviousData postgres.User          `json:"previous_data"`
 	}
-
 	reqBody := requestBody{}
 	if err := c.BindJSON(&reqBody); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	if err := d.usecase.UpdateUser(c.Request.Context(), uint(id),
-		reqBody.Updates); err != nil {
+	user, err := d.usecase.UpdateUser(c.Request.Context(), uint(id),
+		reqBody.PreviousData, reqBody.Data)
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.Status(http.StatusOK)
+	type Response struct {
+		Data postgres.User `json:"data"`
+	}
+	c.JSON(http.StatusOK, Response{
+		Data: user,
+	})
 }
 
 func (d *RestDelivery) DeleteUser(c *gin.Context) {
@@ -206,11 +212,26 @@ func (d *RestDelivery) DeleteUser(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid id parameter"})
 	}
+	type requestBody struct {
+		PreviousData postgres.User `json:"previous_data"`
+	}
+	reqBody := requestBody{}
+	if err := c.BindJSON(&reqBody); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
-	if err := d.usecase.DeleteUser(c.Request.Context(), uint(id)); err != nil {
+	user, err := d.usecase.DeleteUser(c.Request.Context(), uint(id),
+		reqBody.PreviousData)
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.Status(http.StatusOK)
+	type Response struct {
+		Data postgres.User `json:"data"`
+	}
+	c.JSON(http.StatusOK, Response{
+		Data: user,
+	})
 }

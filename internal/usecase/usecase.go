@@ -48,11 +48,12 @@ func (u *Usecase) CreateUser(ctx context.Context, user postgres.User) (
 	return u.repo.CreateUser(ctx, user)
 }
 
-func (u *Usecase) UpdateUser(ctx context.Context, id uint,
-	updates map[string]interface{}) error {
-	return u.repo.UpdateUser(ctx, id, updates)
+func (u *Usecase) UpdateUser(ctx context.Context, id uint, preData postgres.User,
+	updates map[string]interface{}) (postgres.User, error) {
+	return u.repo.UpdateUser(ctx, id, preData, updates)
 }
 
-func (u *Usecase) DeleteUser(ctx context.Context, id uint) error {
-	return u.repo.DeleteUser(ctx, id)
+func (u *Usecase) DeleteUser(ctx context.Context, id uint,
+	preData postgres.User) (postgres.User, error) {
+	return u.repo.DeleteUser(ctx, id, preData)
 }

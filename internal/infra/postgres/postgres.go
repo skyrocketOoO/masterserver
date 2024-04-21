@@ -58,12 +58,20 @@ func (r *OrmRepository) CreateUser(c context.Context, user User) (User, error) {
 	return user, nil
 }
 
-func (r *OrmRepository) UpdateUser(c context.Context, id uint,
-	updates map[string]interface{}) error {
+func (r *OrmRepository) UpdateUser(c context.Context, id uint, preData User,
+	updates map[string]interface{}) (User, error) {
 	user := User{ID: id}
-	return r.db.Model(&user).Updates(updates).Error
+	if err := r.db.Model(&user).Where(preData).Updates(updates).Error; err != nil {
+		return user, err
+	}
+	return user, nil
 }
 
-func (r *OrmRepository) DeleteUser(c context.Context, id uint) error {
-	return r.db.Delete(&User{}, id).Error
+func (r *OrmRepository) DeleteUser(c context.Context, id uint,
+	preData User) (User, error) {
+	user := User{ID: id}
+	if err := r.db.Model(&user).Delete(&preData).Error; err != nil {
+		return user, err
+	}
+	return user, nil
 }

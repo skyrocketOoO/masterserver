@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/viper"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 func InitDB() (*gorm.DB, func(), error) {
@@ -25,7 +26,7 @@ func InitDB() (*gorm.DB, func(), error) {
 
 	db, err := gorm.Open(
 		postgres.Open(connStr), &gorm.Config{
-			Logger: nil,
+			Logger: logger.Default.LogMode(logger.Info),
 		},
 	)
 	if err != nil {
