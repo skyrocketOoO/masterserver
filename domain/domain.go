@@ -14,3 +14,8 @@ type Pagination struct {
 	Page    int
 	PerPage int
 }
+
+type PageInfo struct {
+	HasNextPage bool `json:"hasNextPage"`
+	HasPrevPage bool `json:"hasPreviousPage"`
+}

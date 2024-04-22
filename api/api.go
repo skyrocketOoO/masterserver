@@ -16,6 +16,8 @@ func Binding(r *gin.Engine, d *rest.RestDelivery) {
 		userR.GET("/:id", d.GetUser)
 		userR.POST("", d.CreateUser)
 		userR.PUT("/:id", d.UpdateUser)
+		userR.PUT("", d.UpdateUsers)
 		userR.DELETE("/:id", d.DeleteUser)
+		userR.DELETE("", d.DeleteUsers)
 	}
 }

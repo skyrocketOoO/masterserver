@@ -54,7 +54,7 @@ func (d *RestDelivery) GetUsers(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid filter parameter"})
 		return
 	}
-	paginationStr := c.Query("range")
+	paginationStr := c.Query("pagination")
 	Pagination := []int{}
 	if err := json.Unmarshal([]byte(paginationStr), &Pagination); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid filter parameter"})
@@ -67,7 +67,7 @@ func (d *RestDelivery) GetUsers(c *gin.Context) {
 		return
 	}
 
-	users, err := d.usecase.GetUsers(c.Request.Context(), filter,
+	users, pageInfo, err := d.usecase.GetUsers(c.Request.Context(), filter,
 		domain.Sort{
 			Field: sort[0],
 			Order: sort[1],
@@ -80,13 +80,16 @@ func (d *RestDelivery) GetUsers(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
 	type Response struct {
-		Data  []postgres.User `json:"data"`
-		Total int             `json:"total"`
+		Data     []postgres.User `json:"data"`
+		Total    int             `json:"total"`
+		PageInfo domain.PageInfo `json:"pageInfo"`
 	}
 	c.JSON(http.StatusOK, Response{
-		Data:  users,
-		Total: len(users),
+		Data:     users,
+		Total:    len(users),
+		PageInfo: pageInfo,
 	})
 }
 
@@ -107,44 +110,12 @@ func (d *RestDelivery) GetUser(c *gin.Context) {
 		Data postgres.User `json:"data"`
 	}
 	c.JSON(http.StatusOK, Response{
-		Data: *user,
+		Data: user,
 	})
 }
 
 func (d *RestDelivery) GetManyUsers(c *gin.Context) {
-	// Parse the IDs from the query string
-	idsStr := c.Query("ids")
-	fmt.Println(idsStr)
-	// var getManyParams GetManyParams
-	// if err := json.Unmarshal([]byte(idsStr), &getManyParams); err != nil {
-	// 	c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ids parameter"})
-	// 	return
-	// }
-
-	// // Retrieve the users for the given IDs
-	// users, err := d.usecase.GetManyUsers(c.Request.Context(), getManyParams.ids)
-	// if err != nil {
-	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-	// 	return
-	// }
-
-	// // Return the users as a response
-	// var responseData []Record // Assuming Record is the struct for your users
-	// for _, user := range users {
-	// 	// Convert each user to a Record and append to the responseData slice
-	// 	record := Record{
-	// 		ID:   user.ID,
-	// 		Name: user.Name,
-	// 		// Add other fields as needed
-	// 	}
-	// 	responseData = append(responseData, record)
-	// }
-
-	// // Construct the response
-	// response := GetManyResult{
-	// 	Data: responseData,
-	// }
-	// c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusInternalServerError, gin.H{"message": "not implemented"})
 }
 
 func (d *RestDelivery) GetManyReference(c *gin.Context) {
@@ -206,6 +177,31 @@ func (d *RestDelivery) UpdateUser(c *gin.Context) {
 	})
 }
 
+func (d *RestDelivery) UpdateUsers(c *gin.Context) {
+	type requestBody struct {
+		Ids     []uint                 `json:"ids"`
+		Updates map[string]interface{} `json:"updates"`
+	}
+	reqBody := requestBody{}
+	if err := c.BindJSON(&reqBody); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := d.usecase.UpdateUsers(c.Request.Context(), reqBody.Ids,
+		reqBody.Updates); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	type Response struct {
+		Data []uint `json:"data"`
+	}
+	c.JSON(http.StatusOK, Response{
+		Data: reqBody.Ids,
+	})
+}
+
 func (d *RestDelivery) DeleteUser(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -233,5 +229,28 @@ func (d *RestDelivery) DeleteUser(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, Response{
 		Data: user,
+	})
+}
+
+func (d *RestDelivery) DeleteUsers(c *gin.Context) {
+	type requestBody struct {
+		Ids []uint `json:"ids"`
+	}
+	reqBody := requestBody{}
+	if err := c.BindJSON(&reqBody); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := d.usecase.DeleteUsers(c.Request.Context(), reqBody.Ids); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	type Response struct {
+		Data []uint `json:"data"`
+	}
+	c.JSON(http.StatusOK, Response{
+		Data: reqBody.Ids,
 	})
 }
